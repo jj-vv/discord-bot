@@ -11,19 +11,15 @@ const client = new Client({
 
 const PREFIX = '.';
 
-client.once('ready', () => {
-  console.log('Bot is online as ' + client.user.tag);
-});
-
 client.on('guildMemberAdd', async (member) => {
   const channel = member.guild.channels.cache.find(ch => ch.name === 'welcome');
   if (!channel) return;
   const embed = new EmbedBuilder()
     .setAuthor({ name: '[RLFF] Referee Department', iconURL: member.guild.iconURL() })
     .setTitle('Welcome')
-    .setDescription(member + ' Welcome to the **[RLFF] Referee Department**.')
+    .setDescription(`<@${member.id}> Welcome to the **[RLFF] Referee Department**.`)
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setImage('https://kommodo.ai/i/wYAyqmJaXD5cLIGPNEto')
+    .setImage('https://imgur.com/a/g94TmgW')
     .setColor(0xfdbf07);
   await channel.send({ embeds: [embed] });
 });
@@ -117,6 +113,33 @@ client.on('messageCreate', async (message) => {
     await target.roles.add(role);
     return message.reply('Added role ' + roleName + ' to ' + target.user.tag);
   }
+});
+
+// Stats channels - update every 5 minutes
+async function updateStats() {
+  const guild = client.guilds.cache.first();
+  if (!guild) return;
+
+  // Total members channel
+  const membersChannel = guild.channels.cache.find(ch => ch.name.startsWith('👥'));
+  if (membersChannel) {
+    await membersChannel.setName(`👥 Members: ${guild.memberCount}`);
+  }
+
+  // Referees role counter
+  const refereeRole = guild.roles.cache.find(r => r.name === 'RLFF | Referee');
+  if (refereeRole) {
+    const refChannel = guild.channels.cache.find(ch => ch.name.startsWith('🟡'));
+    if (refChannel) {
+      await refChannel.setName(`🟡 Referees: ${refereeRole.members.size}`);
+    }
+  }
+}
+
+client.once('ready', () => {
+  console.log('Bot is online as ' + client.user.tag);
+  updateStats();
+  setInterval(updateStats, 5 * 60 * 1000); // every 5 minutes
 });
 
 client.login(process.env.TOKEN);
