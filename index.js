@@ -142,4 +142,7 @@ client.once('ready', () => {
   setInterval(updateStats, 5 * 60 * 1000); // every 5 minutes
 });
 
+const http = require('http');
+http.createServer((req, res) => res.end('Bot is alive!')).listen(3000);
+
 client.login(process.env.TOKEN);
