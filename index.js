@@ -166,6 +166,15 @@ client.on('messageCreate', async (message) => {
 
     await channel.send({ embeds: [embed] });
     return message.reply(`✅ Suspension #${suspensionId} issued for ${target.user.tag} (${offenseText} offense).`);
+    if (command === 'revoke') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('Only admins can revoke suspensions.');
+    }
+    const target = message.mentions.members.first();
+    if (!target) return message.reply('Usage: `.revoke @user`');
+    suspensions.delete(target.user.id);
+    return message.reply(`✅ Suspension record cleared for ${target.user.tag}.`);
+  }
   }
 });
 
