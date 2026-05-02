@@ -22,7 +22,7 @@ client.on('guildMemberAdd', async (member) => {
     .setTitle('Welcome')
     .setDescription(`<@${member.id}> Welcome to the **[RLFF] Referee Department**.`)
     .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
-    .setImage('https://imgur.com/a/g94TmgW')
+    .setImage('no picture for now')
     .setColor(0xfdbf07);
   await channel.send({ embeds: [embed] });
 });
