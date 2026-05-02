@@ -120,13 +120,13 @@ async function updateStats() {
   const guild = client.guilds.cache.first();
   if (!guild) return;
 
-  // Total members channel
+  await guild.members.fetch();
+
   const membersChannel = guild.channels.cache.find(ch => ch.name.startsWith('👥'));
   if (membersChannel) {
     await membersChannel.setName(`👥 Members: ${guild.memberCount}`);
   }
 
-  // Referees role counter
   const refereeRole = guild.roles.cache.find(r => r.name === 'RLFF | Referee');
   if (refereeRole) {
     const refChannel = guild.channels.cache.find(ch => ch.name.startsWith('🟡'));
