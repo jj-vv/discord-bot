@@ -11,6 +11,9 @@ const client = new Client({
 
 const PREFIX = '.';
 
+const suspensions = new Map();
+let suspensionIdCounter = 1;
+
 client.on('guildMemberAdd', async (member) => {
   const channel = member.guild.channels.cache.find(ch => ch.name === 'welcome');
   if (!channel) return;
@@ -112,6 +115,57 @@ client.on('messageCreate', async (message) => {
     if (!role) return message.reply('Role not found.');
     await target.roles.add(role);
     return message.reply('Added role ' + roleName + ' to ' + target.user.tag);
+  }
+  if (command === 'suspend') {
+    if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return message.reply('Only admins can issue suspensions.');
+    }
+
+    const target = message.mentions.members.first();
+    const type = args[1]?.toLowerCase();
+    const permanent = args[2]?.toLowerCase();
+    const reason = args.slice(3).join(' ');
+
+    if (!target || !type || !permanent || !reason) {
+      return message.reply('Usage: `.suspend @user strike/sack true/false reason`');
+    }
+
+    if (!['strike', 'sack'].includes(type)) {
+      return message.reply('Type must be `strike` or `sack`.');
+    }
+
+    if (!['true', 'false'].includes(permanent)) {
+      return message.reply('Permanent must be `true` or `false`.');
+    }
+
+    const userId = target.user.id;
+    const currentOffenses = suspensions.get(userId) || 0;
+    const newOffenses = currentOffenses + 1;
+    suspensions.set(userId, newOffenses);
+
+    const offenseText = newOffenses === 1 ? 'First' : newOffenses === 2 ? 'Second' : newOffenses === 3 ? 'Third' : `${newOffenses}th`;
+    const suspensionId = suspensionIdCounter++;
+    const typeText = type.charAt(0).toUpperCase() + type.slice(1);
+    const permanentText = permanent.charAt(0).toUpperCase() + permanent.slice(1);
+
+    const channel = message.guild.channels.cache.find(ch => ch.name === 'referee-strikes');
+    if (!channel) return message.reply('referee-strikes channel not found!');
+
+    const embed = new EmbedBuilder()
+      .setTitle('Referee Suspension')
+      .addFields(
+        { name: 'Discord User', value: `${target} (${target.user.id})`, inline: false },
+        { name: 'Reason', value: reason, inline: false },
+        { name: 'Offense', value: offenseText, inline: false },
+        { name: 'Type', value: typeText, inline: false }
+      )
+      .setDescription(`-# Permanent: ${permanentText}\n-# Suspension ID: #${suspensionId}`)
+      .setColor(type === 'sack' ? 0xff0000 : 0xfdbf07)
+      .setFooter({ text: `Issued by ${message.author.tag}` })
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+    return message.reply(`✅ Suspension #${suspensionId} issued for ${target.user.tag} (${offenseText} offense).`);
   }
 });
 
